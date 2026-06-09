@@ -151,8 +151,9 @@
   .success{display:none;text-align:center;padding:30px 10px;animation:fadeUp .45s ease both}
   @keyframes fadeUp{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
   .success svg{margin:0 auto 18px}
-  .success h3{font-size:1.6rem;color:var(--ink);margin-bottom:10px}
-  .success p{color:var(--slate);font-size:1.05rem;max-width:44ch;margin:0 auto 14px}
+  .success h3{font-size:1.6rem;color:#fff;margin-bottom:10px}
+  .success p{color:#dce4f5;font-size:1.05rem;max-width:44ch;margin:0 auto 14px}
+  .success p b{color:#fff}
   .success .venmo-go{display:inline-flex;align-items:center;gap:10px;background:#008CFF;color:#fff;font-family:"Oswald";font-weight:600;text-transform:uppercase;letter-spacing:.05em;padding:18px 34px;font-size:1.05rem;border-radius:3px;text-decoration:none;margin-top:8px;box-shadow:0 8px 24px rgba(0,140,255,.3);transition:transform .15s}
   .success .venmo-go:hover{transform:translateY(-2px)}
 
@@ -168,18 +169,44 @@
   .disclaimer{font-size:.8rem;color:#7e8eb0;max-width:1200px;margin:14px auto 0;line-height:1.5}
 
   @media(max-width:880px){
-    .navlinks{display:none}
-    .navtoggle{display:block}
+    /* NAV — hamburger becomes a real toggle; links stack full-width in the dark header */
+    nav{flex-wrap:wrap;padding:12px 18px}
+    .navtoggle{display:block;padding:8px;margin:-8px -8px -8px 0}
+    .navlinks{display:none;flex-basis:100%;width:100%;flex-direction:column;align-items:stretch;gap:0;margin-top:10px;font-size:1rem}
+    .navlinks.open{display:flex}
+    .navlinks a{color:#fff;padding:15px 6px;min-height:48px;display:flex;align-items:center;border-top:1px solid rgba(255,255,255,.14)}
+    .navlinks .btn{justify-content:center;text-align:center;margin-top:12px;padding:16px 22px;min-height:48px;border-top:none}
+
     .split,.form-grid,.dir-grid{grid-template-columns:1fr}
+    .dir-grid > *{min-width:0}
     .strip-grid{grid-template-columns:1fr;}
     .strip-grid div{border-left:none;border-top:1px solid rgba(255,255,255,.1)}
     .strip-grid div:first-child{border-top:none}
     .rules-grid{grid-template-columns:1fr}
     .pay-card{position:static}
     .frow{grid-template-columns:1fr}
-    .hero-badge{width:96px;height:96px;top:auto;bottom:24px;right:18px}
-    .hero-badge .big{font-size:1.5rem}
+
+    /* HERO badge — top-right, smaller, never over the headline or CTA buttons */
+    .hero-badge{width:84px;height:84px;top:14px;bottom:auto;right:14px;border-width:2px}
+    .hero-badge .big{font-size:1.4rem}
+    .hero-badge small{font-size:.52rem}
+    .hero-inner{padding-bottom:54px}
     .photo-frame img{aspect-ratio:16/10}
+
+    /* MAP iframe — kill the 300px intrinsic min-width that forced page overflow */
+    .map-embed{width:100%;min-width:0;max-width:100%}
+
+    /* FOOTER — collapse the 3-column grid so it stops spilling off-screen */
+    .foot-grid{grid-template-columns:1fr;gap:30px}
+
+    /* Tap targets: every button comfortably ≥44px for thumbs */
+    .btn{min-height:44px;display:inline-flex;align-items:center;justify-content:center}
+
+    /* Form fields: explicit 16px so iOS doesn't auto-zoom on focus */
+    .field input,.field select{font-size:16px;padding:13px}
+
+    /* Success / payment screen on mobile */
+    .success .venmo-go{width:100%;justify-content:center;padding:16px 18px;font-size:1rem}
   }
   @media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}.btn:hover{transform:none}}
 </style>
@@ -192,13 +219,13 @@
       <img class="mark" src="images/logo-m.png" alt="Main Street Parking logo" width="38" height="38">
       <div><b>Main Street Parking</b><span>Buzzards Bay, MA</span></div>
     </a>
-    <div class="navlinks">
+    <div class="navlinks" id="navlinks">
       <a href="#about">About</a>
       <a href="#directions">Directions</a>
       <a href="#rules">Lot Rules</a>
       <a href="#reserve" class="btn">Reserve a Pass</a>
     </div>
-    <button class="navtoggle" aria-label="Menu" onclick="document.querySelector('.navlinks').style.display='flex'">
+    <button class="navtoggle" id="navToggle" aria-label="Toggle menu" aria-expanded="false" aria-controls="navlinks">
       <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M3 12h18M3 18h18"/></svg>
     </button>
   </nav>
@@ -424,6 +451,22 @@
 </footer>
 
 <script>
+  // Mobile nav: real open/close toggle + close after tapping a link
+  (function(){
+    var toggle = document.getElementById('navToggle');
+    var links = document.getElementById('navlinks');
+    function setOpen(open){
+      links.classList.toggle('open', open);
+      toggle.setAttribute('aria-expanded', open ? 'true' : 'false');
+    }
+    toggle.addEventListener('click', function(){
+      setOpen(!links.classList.contains('open'));
+    });
+    links.querySelectorAll('a').forEach(function(a){
+      a.addEventListener('click', function(){ setOpen(false); });
+    });
+  })();
+
   document.getElementById('regForm').addEventListener('submit', async function(e){
     e.preventDefault();
     var form = e.target;
